@@ -1,7 +1,14 @@
-import geopandas as gpd
-# import pandas as pd
+"""Extract parcels for a set of Public Land Survey System descriptions.
 
-parcels_data = gpd.read_file(r'Township_template.shp')
+The target area is described as a list of Township/Range/Section triples. This
+script selects the matching parcels out of a statewide dataset, combines them,
+and reports how many duplicate records the selection produced.
+"""
+
+import geopandas as gpd
+import pandas as pd
+
+parcels_data = gpd.read_file('Township_template.shp')
 
 # townships_nums = [19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
 # ranges_nums = [28, 30, 31, 32, 33, 34, 35, 36, 37]
@@ -83,11 +90,15 @@ condition19 = parcels_data[(parcels_data['Township'] == 21) & (parcels_data['Ran
 section19 = condition19[condition19['Section'].isin([15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35])]
 
 condition20 = parcels_data[(parcels_data['Township'] == 21) & (parcels_data['Range'] == 36)]
+# NOTE: 335 is not a valid section number (sections run 1-36) and matches nothing.
+# Likely a typo for 33 or 36 - needs checking against the source description.
 section20 = condition20[condition20['Section'].isin([8, 11, 12, 13, 14, 15, 17, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 31, 32, 33, 34, 35, 335])]
 
 condition21 = parcels_data[(parcels_data['Township'] == 21) & (parcels_data['Range'] == 37)]
 section21 = condition21[condition21['Section'].isin([7, 18, 19, 30])]
 
+# NOTE: every other range in this selection falls between 28 and 39, so Range 3
+# looks like a truncated value - needs checking against the source description.
 condition22 = parcels_data[(parcels_data['Township'] == 21) & (parcels_data['Range'] == 3)]
 section22 = condition22[condition22['Section'] == 11]
 
@@ -197,7 +208,7 @@ condition52 = parcels_data[(parcels_data['Township'] == 28) & (parcels_data['Ran
 section52 = condition52[condition52['Section'].isin([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 26, 27, 28, 29, 30, 31, 32, 33, 34])]
 
 condition53 = parcels_data[(parcels_data['Township'] == 28) & (parcels_data['Range'] == 32)]
-section53 = condition53[condition53['Section'].isin([[1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]])]
+section53 = condition53[condition53['Section'].isin([1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35])]
 
 condition54 = parcels_data[(parcels_data['Township'] == 28) & (parcels_data['Range'] == 33)]
 section54 = condition54[condition54['Section'].isin([6, 13, 14, 15, 19, 20, 21, 23, 24, 25, 26, 27, 28, 32, 33, 34, 35])]
@@ -289,8 +300,6 @@ section77 = condition77[condition77['Section'].isin([7, 8, 9, 17, 18, 19, 20, 21
 
 
 
-appended_gdf = gpd.GeoDataFrame()
-
 gdf_list = [section1, section2, section3, section4, section5, section6, section7, section8, section9, section10, section11, section12, section13, section14, section15,
             section16, section17, section18, section19, section20, section21, section22, section23, section24, section25, section26, section27, section28, section29,
             section30, section31, section32, section33, section34, section35, section36, section37, section38, section39, section40, section41, section42, section43,
@@ -299,8 +308,9 @@ gdf_list = [section1, section2, section3, section4, section5, section6, section7
             section72, section73, section74, section75, section76, section77]
 
 
-for gdf in gdf_list:
-    appended_gdf = appended_gdf.append(gdf, ignore_index=True)
+appended_gdf = gpd.GeoDataFrame(
+    pd.concat(gdf_list, ignore_index=True), crs=parcels_data.crs
+)
 #
 # # unique_gdf = appended_gdf.drop_duplicates(subset=['Township', 'Range', 'Section', 'geometry'])
 #
